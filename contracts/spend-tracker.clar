@@ -3,8 +3,9 @@
 ;; Constants
 (define-constant contract-owner tx-sender)
 (define-constant err-owner-only (err u100))
-(define-constant err-invalid-amount (err u101))
+(define-constant err-invalid-amount (err u101)) 
 (define-constant err-invalid-department (err u102))
+(define-constant err-invalid-category (err u103))
 
 ;; Data Variables
 (define-data-var total-budget uint u0)
@@ -13,11 +14,16 @@
 ;; Data Maps
 (define-map department-budgets principal uint)
 (define-map department-spending principal uint)
+(define-map category-spending
+    (string-ascii 64)
+    uint
+)
 (define-map spending-records
     uint
     {
         department: principal,
         amount: uint,
+        category: (string-ascii 64),
         description: (string-ascii 256),
         timestamp: uint
     }
@@ -35,10 +41,16 @@
     )
 )
 
-(define-public (record-spending (department principal) (amount uint) (description (string-ascii 256)))
+(define-public (record-spending 
+    (department principal) 
+    (amount uint) 
+    (category (string-ascii 64))
+    (description (string-ascii 256))
+)
     (let (
         (current-budget (default-to u0 (map-get? department-budgets department)))
         (current-spending (default-to u0 (map-get? department-spending department)))
+        (category-total (default-to u0 (map-get? category-spending category)))
         (nonce (var-get spending-nonce))
     )
         (asserts! (is-eq tx-sender contract-owner) err-owner-only)
@@ -48,11 +60,13 @@
         (map-set spending-records nonce {
             department: department,
             amount: amount,
+            category: category,
             description: description,
             timestamp: block-height
         })
         
         (map-set department-spending department (+ current-spending amount))
+        (map-set category-spending category (+ category-total amount))
         (var-set spending-nonce (+ nonce u1))
         (ok true)
     )
@@ -67,8 +81,18 @@
     (ok (default-to u0 (map-get? department-spending department)))
 )
 
+(define-read-only (get-category-spending (category (string-ascii 64)))
+    (ok (default-to u0 (map-get? category-spending category)))
+)
+
 (define-read-only (get-spending-record (id uint))
     (ok (map-get? spending-records id))
+)
+
+(define-read-only (get-spending-by-date-range (start-block uint) (end-block uint))
+    (let ((records (list)))
+        (ok records) ;; TODO: Implement date range filtering
+    )
 )
 
 (define-read-only (get-total-budget)
