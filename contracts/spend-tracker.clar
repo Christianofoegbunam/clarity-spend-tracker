@@ -6,6 +6,7 @@
 (define-constant err-invalid-amount (err u101)) 
 (define-constant err-invalid-department (err u102))
 (define-constant err-invalid-category (err u103))
+(define-constant page-size u50)
 
 ;; Data Variables
 (define-data-var total-budget uint u0)
@@ -89,13 +90,27 @@
     (ok (map-get? spending-records id))
 )
 
+(define-read-only (get-spending-page (page uint))
+    (let (
+        (start (* page page-size))
+        (end (+ start page-size))
+        (total (var-get spending-nonce))
+    )
+        (ok {
+            records: (map get-spending-record 
+                (unwrap-panic (slice? start (min end total) (enumerate total)))),
+            total: total
+        })
+    )
+)
+
 (define-read-only (get-spending-by-date-range (start-block uint) (end-block uint))
     (let ((records (list)))
         (ok records) ;; TODO: Implement date range filtering
     )
 )
 
-(define-read-only (get-total-budget)
+(define-read-only (get-total-budget))
     (ok (var-get total-budget))
 )
 
