@@ -8,6 +8,7 @@ A transparent blockchain-based solution for tracking government spending. This c
 - Historical tracking of spending records
 - Real-time budget monitoring
 - Spending categorization and reporting
+- Paginated access to spending records
 
 ## Features
 
@@ -20,6 +21,7 @@ A transparent blockchain-based solution for tracking government spending. This c
 - Spending categories for better organization and analysis
 - Enhanced reporting capabilities with category-based tracking
 - Date range filtering for spending records
+- Paginated access to spending records for efficient data retrieval
 
 ## Purpose
 
@@ -36,3 +38,9 @@ This contract aims to increase government transparency and accountability by pro
 - Query spending by category
 - Date range filtering of spending records
 - Improved spending record structure with additional metadata
+- Paginated access to spending records with configurable page size
+
+### Pagination Support
+- Efficient retrieval of spending records through pagination
+- Configurable page size to manage data load
+- Returns total record count with each page query
