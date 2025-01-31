@@ -70,3 +70,42 @@ Clarinet.test({
         assertEquals(categoryResponse.result.expectOk(), types.uint(500000));
     }
 });
+
+Clarinet.test({
+    name: "Ensure spending records pagination works correctly",
+    async fn(chain: Chain, accounts: Map<string, Account>) {
+        const deployer = accounts.get('deployer')!;
+        const department = accounts.get('wallet_1')!;
+        
+        // Allocate budget
+        chain.mineBlock([
+            Tx.contractCall('spend-tracker', 'allocate-budget', [
+                types.principal(department.address),
+                types.uint(1000000)
+            ], deployer.address)
+        ]);
+        
+        // Record multiple spending entries
+        for (let i = 0; i < 3; i++) {
+            chain.mineBlock([
+                Tx.contractCall('spend-tracker', 'record-spending', [
+                    types.principal(department.address),
+                    types.uint(100000),
+                    types.ascii("INFRASTRUCTURE"),
+                    types.ascii(`Test spending ${i}`)
+                ], deployer.address)
+            ]);
+        }
+        
+        // Test pagination
+        let pageResponse = chain.callReadOnlyFn(
+            'spend-tracker',
+            'get-spending-page',
+            [types.uint(0)],
+            deployer.address
+        );
+        
+        let result = pageResponse.result.expectOk();
+        assertEquals(result.total, types.uint(3));
+    }
+});
